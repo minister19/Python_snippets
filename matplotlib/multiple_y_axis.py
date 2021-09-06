@@ -38,4 +38,12 @@ ax.tick_params(axis='x', **tkw)
 
 ax.legend(handles=[p1, p2, p3])
 
-plt.show()
+x = ax.scatter(x=[0.5, 1.5], y=[0.6, 1.6], s=25, c='green', marker='^')
+
+plt.pause(1.0)
+
+x.remove()
+
+plt.pause(1.0)
+
+# plt.show()
