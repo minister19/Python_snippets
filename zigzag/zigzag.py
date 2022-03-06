@@ -94,10 +94,24 @@ if __name__ == "__main__":
     x, y1, y2 = [], [], []
     for d in z.data:
         x.append(d.idx)
-        y1.append(d.high)
-        y2.append(d.low)
-    scatter_x, scatter_y = [], []
+        y1.append(d.low)
+        y2.append(d.high)
+    scatter_x1, scatter_y1 = [], []
+    scatter_x2, scatter_y2 = [], []
     for d in z.points:
-        scatter_x.append(d.kline.idx)
-        scatter_y.append(d.kline.low if d.is_low else d.kline.high)
-    print(scatter_x, scatter_y)
+        if d.is_low:
+            scatter_x1.append(d.kline.idx)
+            scatter_y1.append(d.kline.low)
+        else:
+            scatter_x2.append(d.kline.idx)
+            scatter_y2.append(d.kline.high)
+
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(num='123')
+
+    p1, = ax.plot(x, y1, "g-")
+    p2, = ax.plot(x, y2, "r-")
+    x = ax.scatter(x=scatter_x1, y=scatter_y1, s=25, c='black', marker='^')
+    x = ax.scatter(x=scatter_x2, y=scatter_y2, s=25, c='blue', marker='v')
+
+    plt.show()
