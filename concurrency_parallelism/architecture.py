@@ -1,6 +1,7 @@
 import json
 import asyncio
 import multiprocessing
+import concurrent.futures
 from function_and_coroutine import print_loop_id
 
 
@@ -37,11 +38,18 @@ def f1(q: multiprocessing.Queue):
     loop.run_forever()
 
 
+def process(item):
+    print(f'process: {json.dumps(item)}')
+
+
 async def processor(q: multiprocessing.Queue):
+    loop = asyncio.get_running_loop()
     while True:
         item = q.get()
         print(f'processor: {json.dumps(item)}')
-        await asyncio.sleep(1)
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            await loop.run_in_executor(pool, process, item)
+            await asyncio.sleep(1)
 
 
 async def market_data_server():
