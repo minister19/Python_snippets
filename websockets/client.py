@@ -1,21 +1,43 @@
-import json
-import websockets
 import asyncio
+import websockets
+from typing import Callable
 
+class WebSocketClient:
+    def __init__(self, uri: str, on_message: Callable[[str], None]) -> None:
+        self.uri = uri
+        self.on_message = on_message
+        self.websocket = None
 
-async def WSSClient():
-    uri = "ws://localhost:6801"
-    async with websockets.connect(uri) as websocket:
-        # msg = json.dumps({'a': 1})
-        # await websocket.send(msg)
+    async def connect(self) -> None:
+        self.websocket = await websockets.connect(self.uri)
 
-        # msg = 'history_15m_1000'
-        # await websocket.send(msg)
+    async def disconnect(self) -> None:
+        await self.websocket.close()
 
-        for _ in range(1000):
-            greeting = await websocket.recv()
-            print(f"<<< {greeting}")
+    async def send(self, message: str) -> None:
+        await self.websocket.send(message)
+
+    async def receive(self) -> None:
+        async for message in self.websocket:
+            await self.on_message(message)
+
+    async def receiveOne(self) -> str:
+        data = await self.websocket.recv()
+        return data
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(WSSClient())
+    async def main() -> None:
+        async def on_message(message: str) -> None:
+            print(message)
+
+        client = WebSocketClient("ws://localhost:1879", on_message)
+        await client.connect()
+
+        message = input("> ")
+        await client.send(message)
+        # await client.receive()
+        await client.receiveOne()
+
+        await client.disconnect()
+
+    asyncio.run(main())
