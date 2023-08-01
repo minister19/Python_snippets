@@ -19,7 +19,7 @@ class Zigzag:
     def __init__(self, depth=12, deviation=3.0) -> None:
         self.depth = depth
         self.deviation = deviation
-        self.data: List[Kline] = []
+        self.klines: List[Kline] = []
         self.points: List[ZigZagPoint] = []
 
     @staticmethod
@@ -40,7 +40,7 @@ class Zigzag:
 
     def init_points(self):
         self.points.clear()
-        init_low, init_high = self.find_min(self.data[0:self.depth]), self.find_max(self.data[0:self.depth])
+        init_low, init_high = self.find_min(self.klines[0:self.depth]), self.find_max(self.klines[0:self.depth])
         if init_low.idx < init_high.idx:
             self.points.append(ZigZagPoint(init_low.idx, init_low.high, init_low.low, 'v'))
             self.points.append(ZigZagPoint(init_high.idx, init_high.high, init_high.low, '^'))
@@ -51,8 +51,8 @@ class Zigzag:
     def find_points(self):
         previous = self.points[-1]
         step = previous.idx + 1
-        while step < len(self.data):
-            pivot = self.data[step]
+        while step < len(self.klines):
+            pivot = self.klines[step]
             # 2022-09-29 Shawn: 极端情况，单个k线既有最大值，也有最小值，优先延续之前的信号
             if previous.type == 'v':
                 if pivot.low < previous.low:
@@ -68,7 +68,7 @@ class Zigzag:
             step = step + 1
 
     def forward(self):
-        if len(self.data) < self.depth:
+        if len(self.klines) < self.depth:
             pass
         elif len(self.points) < 2:
             self.init_points()
@@ -78,7 +78,7 @@ class Zigzag:
     def render(self):
         import matplotlib.pyplot as plt
         x, y1, y2 = [], [], []
-        for d in self.data:
+        for d in self.klines:
             x.append(d.idx)
             y1.append(d.low)
             y2.append(d.high)
@@ -114,8 +114,7 @@ if __name__ == "__main__":
         else:
             high = low
             low = low * (1 - random() / 100)
-        z.data.append(Kline(i, high, low))
-        # z.forward()
+        z.klines.append(Kline(i, high, low))
+        z.forward()
         # z.render()
-    z.forward()
     z.render()
