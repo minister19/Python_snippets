@@ -24,7 +24,8 @@ class WebSocketServer:
         self.clients.add(client)
         try:
             async for message in client:
-                await self.handle_message(client, message)
+                if self.handle_message:
+                    await self.handle_message(client, message)
         except websockets.exceptions.ConnectionClosed:
             pass
         finally:
@@ -43,7 +44,6 @@ if __name__ == "__main__":
     async def handle_message(sender: WSP, message: str) -> None:
         print(sender, message)
         await sender.send(message)
-        pass
 
     async def main() -> None:
         server = WebSocketServer("localhost", 6800, handle_message)

@@ -23,7 +23,8 @@ class WebSocketClient:
 
     async def receive(self) -> None:
         async for message in self.websocket:
-            await self.on_message(message)
+            if self.on_message:
+                await self.on_message(message)
 
     async def receiveOne(self) -> str:
         data = await self.websocket.recv()
@@ -35,14 +36,14 @@ if __name__ == "__main__":
         async def on_message(message: str) -> None:
             print(message)
 
-        client = WebSocketClient("ws://localhost:6101", on_message)
+        client = WebSocketClient("ws://localhost:6800", on_message)
         await client.connect()
 
-        # message = input("> ")
-        # await client.send(message)
-        # await client.receiveOne()
+        message = input("> ")
+        await client.send(message)
+        await client.receiveOne()
 
-        await client.receive()
+        # await client.receive()
 
         await client.disconnect()
 
