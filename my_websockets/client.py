@@ -43,7 +43,6 @@ if __name__ == "__main__":
         message = input("> ")
         await client.send(message)
         await client.receiveOne()
-
         # await client.receive()
 
         await client.disconnect()
