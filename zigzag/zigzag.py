@@ -10,8 +10,8 @@ class Kline:
 
 
 class ZigZagPoint(Kline):
-    def __init__(self, idx, high, low, type='-') -> None:
-        super().__init__(idx, high, low)
+    def __init__(self, kline: Kline, type='-') -> None:
+        super().__init__(**kline.__dict__)
         self.type = type  # '-', '^', 'v'
 
 
@@ -20,7 +20,7 @@ class Zigzag:
         self.depth = depth
         self.deviation = deviation
         self.klines: List[Kline] = []
-        self.points: List[ZigZagPoint] = []
+        self.points: List[ZigZagPoint] = []  # 高低点
 
     @staticmethod
     def find_min(data: List[Kline]):
@@ -42,11 +42,11 @@ class Zigzag:
         self.points.clear()
         init_low, init_high = self.find_min(self.klines[0:self.depth]), self.find_max(self.klines[0:self.depth])
         if init_low.idx < init_high.idx:
-            self.points.append(ZigZagPoint(init_low.idx, init_low.high, init_low.low, 'v'))
-            self.points.append(ZigZagPoint(init_high.idx, init_high.high, init_high.low, '^'))
+            self.points.append(ZigZagPoint(init_low, 'v'))
+            self.points.append(ZigZagPoint(init_high, '^'))
         else:
-            self.points.append(ZigZagPoint(init_high.idx, init_high.high, init_high.low, '^'))
-            self.points.append(ZigZagPoint(init_low.idx, init_low.high, init_low.low, 'v'))
+            self.points.append(ZigZagPoint(init_high, '^'))
+            self.points.append(ZigZagPoint(init_low, 'v'))
 
     def find_points(self):
         previous = self.points[-1]
@@ -56,14 +56,14 @@ class Zigzag:
             # 2022-09-29 Shawn: 极端情况，单个k线既有最大值，也有最小值，优先延续之前的信号
             if previous.type == 'v':
                 if pivot.low < previous.low:
-                    self.points[-1] = ZigZagPoint(pivot.idx, pivot.high, pivot.low, 'v')
+                    self.points[-1] = ZigZagPoint(pivot, 'v')
                 elif pivot.high > previous.low * (1 + self.deviation/100):
-                    self.points.append(ZigZagPoint(pivot.idx, pivot.high, pivot.low, '^'))
+                    self.points.append(ZigZagPoint(pivot, '^'))
             else:
                 if pivot.high > previous.high:
-                    self.points[-1] = ZigZagPoint(pivot.idx, pivot.high, pivot.low, '^')
+                    self.points[-1] = ZigZagPoint(pivot, '^')
                 elif pivot.low < previous.high * (1 - self.deviation/100):
-                    self.points.append(ZigZagPoint(pivot.idx, pivot.high, pivot.low, 'v'))
+                    self.points.append(ZigZagPoint(pivot, 'v'))
             previous = self.points[-1]
             step = step + 1
 
@@ -103,7 +103,7 @@ class Zigzag:
 
 
 if __name__ == "__main__":
-    z = Zigzag()
+    z = Zigzag(12, 5)
     high = 10000
     low = 10000
     for i in range(1000):
