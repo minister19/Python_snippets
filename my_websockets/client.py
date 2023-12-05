@@ -11,7 +11,7 @@ class WebSocketClient:
         self.connected = False
 
     async def connect(self) -> None:
-        self.websocket = await websockets.connect(self.uri)
+        self.websocket = await websockets.connect(self.uri, max_size=2**30)
         self.connected = True
 
     async def disconnect(self) -> None:
