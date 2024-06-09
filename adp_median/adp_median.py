@@ -8,7 +8,7 @@ def AdaptProcess(src, i, minSize, maxSize):
     filter_size = minSize
 
     kernelSize = filter_size // 2
-    rio = src[i-kernelSize:i+kernelSize+1]
+    rio = src[i - kernelSize:i + kernelSize + 1]
     minPix = np.min(rio)
     maxPix = np.max(rio)
     medPix = np.median(rio)
@@ -31,7 +31,7 @@ def adapt_meadian_filter(data, minsize=7, maxsize=14):
     borderSize = maxsize // 2
 
     src = list(data)
-    src.extend(data[-1-borderSize:-1])
+    src.extend(data[-1 - borderSize:-1])
 
     for m in range(borderSize, len(src) - borderSize):
         src[m] = AdaptProcess(src, m, minsize, maxsize)
@@ -41,9 +41,9 @@ def adapt_meadian_filter(data, minsize=7, maxsize=14):
 
 
 def main():
-    data = [0, 1, 2, 3, 4, 100]
+    data = [0, 1, 2, 3, 4, 100, 200, 1, 2, 3, 4, 3, 2, 1, 0]
 
-    dst = adapt_meadian_filter(data=data, minsize=1, maxsize=7)
+    dst = adapt_meadian_filter(data=data, minsize=2, maxsize=7)
     print(data, len(data))
     print(dst, len(dst))
 
