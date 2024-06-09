@@ -1,4 +1,3 @@
-from random import random
 from typing import List
 
 
@@ -16,11 +15,16 @@ class ZigZagPoint(Kline):
 
 
 class Zigzag:
-    def __init__(self, depth=12, deviation=3.0) -> None:
-        self.depth = depth
-        self.deviation = deviation
+    def __init__(self, p_depth=100, p_deviation_range=[10.0, 5.0]) -> None:
+        self.p_depth = p_depth
+        self.p_deviation_start = p_deviation_range[0] / 100
+        self.p_deviation_stop = p_deviation_range[1] / 100
+        self.p_deviation_step = (self.p_deviation_start - self.p_deviation_stop) / self.p_depth
+        self.p_deviation_pre = self.p_deviation_start
+        self.p_deviation = self.p_deviation_start
         self.klines: List[Kline] = []
         self.points: List[ZigZagPoint] = []  # 高低点
+        self.idx = 0
 
     @staticmethod
     def find_min(data: List[Kline]):
@@ -40,7 +44,7 @@ class Zigzag:
 
     def init_points(self):
         self.points.clear()
-        init_low, init_high = self.find_min(self.klines[0:self.depth]), self.find_max(self.klines[0:self.depth])
+        init_low, init_high = self.find_min(self.klines[0:self.p_depth]), self.find_max(self.klines[0:self.p_depth])
         if init_low.idx < init_high.idx:
             self.points.append(ZigZagPoint(init_low, 'v'))
             self.points.append(ZigZagPoint(init_high, '^'))
@@ -57,23 +61,43 @@ class Zigzag:
             if previous.type == 'v':
                 if pivot.low < previous.low:
                     self.points[-1] = ZigZagPoint(pivot, 'v')
-                elif pivot.high > previous.low * (1 + self.deviation/100):
+                elif pivot.high > previous.low * (1 + self.p_deviation):
                     self.points.append(ZigZagPoint(pivot, '^'))
             else:
                 if pivot.high > previous.high:
                     self.points[-1] = ZigZagPoint(pivot, '^')
-                elif pivot.low < previous.high * (1 - self.deviation/100):
+                elif pivot.low < previous.high * (1 - self.p_deviation):
                     self.points.append(ZigZagPoint(pivot, 'v'))
             previous = self.points[-1]
             step = step + 1
 
-    def forward(self):
-        if len(self.klines) < self.depth:
+    def forward(self, high=None, low=None):
+        if len(self.points) > 0 and self.points[-1].idx == (self.idx - 1):
+            self.p_deviation_pre = self.p_deviation
+            self.p_deviation = self.p_deviation_start
+        elif self.p_deviation > self.p_deviation_stop:
+            self.p_deviation -= self.p_deviation_step
+
+        self.klines.append(Kline(self.idx, high, low))
+        if len(self.klines) < self.p_depth:
             pass
         elif len(self.points) < 2:
             self.init_points()
         else:
             self.find_points()
+
+        self.idx += 1
+
+    def backward(self):
+        if len(self.points) > 0 and self.points[-1].idx == (self.idx - 1):
+            self.p_deviation = self.p_deviation_pre
+            self.points.pop()
+        elif self.p_deviation > self.p_deviation_stop:
+            self.p_deviation += self.p_deviation_step
+
+        self.klines.pop()
+
+        self.idx -= 1
 
     def render(self):
         import matplotlib.pyplot as plt
@@ -103,18 +127,22 @@ class Zigzag:
 
 
 if __name__ == "__main__":
-    z = Zigzag(12, 5)
+    import random
+    random.seed(0)
+
+    z = Zigzag(100, [5, 3])
     high = 10000
     low = 10000
     for i in range(1000):
-        is_up = random() > 0.5
+        is_up = random.random() > 0.5
         if is_up:
             low = high
-            high = high * (1 + random() / 100)
+            high = high * (1 + random.random() / 100)
         else:
             high = low
-            low = low * (1 - random() / 100)
-        z.klines.append(Kline(i, high, low))
-        z.forward()
+            low = low * (1 - random.random() / 100)
+        z.forward(high, low)
+        z.backward()
+        z.forward(high, low)
         # z.render()
     z.render()
