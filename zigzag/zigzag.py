@@ -9,7 +9,7 @@ class Kline:
 
 
 class ZigZagPoint(Kline):
-    def __init__(self, kline: Kline, type='-') -> None:
+    def __init__(self, kline: Kline, type: str = '-') -> None:
         super().__init__(**kline.__dict__)
         self.type = type  # '-', '^', 'v'
 
