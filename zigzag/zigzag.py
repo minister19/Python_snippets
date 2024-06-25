@@ -22,8 +22,8 @@ class Zigzag:
         self.p_deviation_step = (self.p_deviation_start - self.p_deviation_stop) / self.p_depth
         self.p_deviation_pre = self.p_deviation_start
         self.p_deviation = self.p_deviation_start
-        self.klines: List[Kline] = []
-        self.points: List[ZigZagPoint] = []  # 高低点
+        self.klines: List[Kline] = []           # K线
+        self.points: List[ZigZagPoint] = []     # 高低点
         self.idx = 0
 
     @staticmethod
@@ -72,13 +72,8 @@ class Zigzag:
             step = step + 1
 
     def forward(self, high=None, low=None):
-        if len(self.points) > 0 and self.points[-1].idx == (self.idx - 1):
-            self.p_deviation_pre = self.p_deviation
-            self.p_deviation = self.p_deviation_start
-        elif self.p_deviation > self.p_deviation_stop:
-            self.p_deviation -= self.p_deviation_step
-
         self.klines.append(Kline(self.idx, high, low))
+
         if len(self.klines) < self.p_depth:
             pass
         elif len(self.points) < 2:
@@ -86,16 +81,22 @@ class Zigzag:
         else:
             self.find_points()
 
+        if len(self.points) > 0 and self.points[-1].idx == self.idx:
+            self.p_deviation_pre = self.p_deviation
+            self.p_deviation = self.p_deviation_start
+        elif self.p_deviation > self.p_deviation_stop:
+            self.p_deviation -= self.p_deviation_step
+
         self.idx += 1
 
     def backward(self):
+        self.klines.pop()
+
         if len(self.points) > 0 and self.points[-1].idx == (self.idx - 1):
             self.p_deviation = self.p_deviation_pre
             self.points.pop()
         elif self.p_deviation > self.p_deviation_stop:
             self.p_deviation += self.p_deviation_step
-
-        self.klines.pop()
 
         self.idx -= 1
 
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     import random
     random.seed(0)
 
-    z = Zigzag(100, [5, 3])
+    z = Zigzag(100, [3, 3])
     high = 10000
     low = 10000
     for i in range(1000):
