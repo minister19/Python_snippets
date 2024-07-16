@@ -129,9 +129,8 @@ class Zigzag:
 
 if __name__ == "__main__":
     import random
-    random.seed(0)
 
-    z = Zigzag(100, [3, 3])
+    z = Zigzag(100, [6, 3])
     high = 10000
     low = 10000
     for i in range(1000):
