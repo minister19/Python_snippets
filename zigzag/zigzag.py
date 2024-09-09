@@ -1,4 +1,5 @@
 from typing import List
+from dynamic_range import DynamicRange
 
 
 class Kline:
@@ -9,23 +10,21 @@ class Kline:
 
 
 class ZigZagPoint(Kline):
-    def __init__(self, kline: Kline, type: str = '-') -> None:
+    def __init__(self, kline: Kline, type: str) -> None:
         super().__init__(**kline.__dict__)
         self.type = type  # '-', '^', 'v'
 
 
 class Zigzag:
-    def __init__(self, p_depth=100, p_deviation_range=[10.0, 5.0]) -> None:
+    def __init__(self, p_depth=200, p_deviation_range=[10.0, 5.0, 4.0]) -> None:
         self.depth = p_depth
-        self.deviation_range = p_deviation_range
-        self.deviation_start = p_deviation_range[0] / 100
-        self.deviation_stop = p_deviation_range[1] / 100
-        self.deviation_step = (self.deviation_start - self.deviation_stop) / self.depth
-        self.deviation_pre = self.deviation_start
-        self.deviation = self.deviation_start
+        self.deviation = DynamicRange(p_depth, p_deviation_range)
         self.klines: List[Kline] = []           # K线
         self.points: List[ZigZagPoint] = []     # 高低点
         self.idx = 0
+        self.step = p_depth
+        self.step_pre = p_depth
+        self.cache: tuple[ZigZagPoint, float] = (None, None)
 
     @staticmethod
     def find_min(data: List[Kline]):
@@ -54,23 +53,22 @@ class Zigzag:
             self.points.append(ZigZagPoint(init_low, 'v'))
 
     def find_points(self):
-        previous = self.points[-1]
-        step = previous.idx + 1
-        while step < len(self.klines):
-            pivot = self.klines[step]
+        while self.step < len(self.klines):
+            pivot = self.klines[self.step]
             # 2022-09-29 Shawn: 极端情况，单个k线既有最大值，也有最小值，优先延续之前的信号
-            if previous.type == 'v':
-                if pivot.low < previous.low:
+            if self.points[-1].type == 'v':
+                if pivot.low < self.points[-1].low:
+                    self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigZagPoint(pivot, 'v')
-                elif pivot.high > previous.low * (1 + self.deviation):
+                elif pivot.high > self.points[-1].low * (1 + self.deviation.value):
                     self.points.append(ZigZagPoint(pivot, '^'))
             else:
-                if pivot.high > previous.high:
+                if pivot.high > self.points[-1].high:
+                    self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigZagPoint(pivot, '^')
-                elif pivot.low < previous.high * (1 - self.deviation):
+                elif pivot.low < self.points[-1].high * (1 - self.deviation.value):
                     self.points.append(ZigZagPoint(pivot, 'v'))
-            previous = self.points[-1]
-            step = step + 1
+            self.step += 1
 
     def forward(self, high=None, low=None):
         self.klines.append(Kline(self.idx, high, low))
@@ -80,24 +78,32 @@ class Zigzag:
         elif len(self.points) < 2:
             self.init_points()
         else:
+            self.step_pre = self.step
             self.find_points()
-
-        if len(self.points) > 0 and self.points[-1].idx == self.idx:
-            self.deviation_pre = self.deviation
-            self.deviation = self.deviation_start
-        elif self.deviation > self.deviation_stop:
-            self.deviation -= self.deviation_step
+            if self.points[-1].idx == self.idx:
+                self.deviation.reset()
+            else:
+                self.deviation.forward()
 
         self.idx += 1
 
+    # 2024-09-09 Shawn: 当覆写 self.points[-1] 时，backward 应恢复原始 point
     def backward(self):
         self.klines.pop()
 
-        if len(self.points) > 0 and self.points[-1].idx == (self.idx - 1):
-            self.deviation = self.deviation_pre
-            self.points.pop()
-        elif self.deviation > self.deviation_stop:
-            self.deviation += self.deviation_step
+        if len(self.points) < 2:
+            pass
+        else:
+            self.step = self.step_pre
+            if self.points[-1].idx == (self.idx - 1):
+                point_new = self.points.pop()
+                if point_new.type == self.cache[0].type:
+                    self.points.append(self.cache[0])
+                    self.deviation.restore(self.cache[1])
+                else:
+                    self.deviation.restore()
+            else:
+                self.deviation.backward()
 
         self.idx -= 1
 
@@ -130,18 +136,20 @@ class Zigzag:
 
 if __name__ == "__main__":
     import random
+    random.seed(0)
 
-    z = Zigzag(100, [6, 3])
+    z = Zigzag(100, [10.0, 5.0, 4.0])
     high = 10000
     low = 10000
-    for i in range(1000):
-        is_up = random.random() > 0.5
+    for i in range(10000):
+        data = random.random() - 0.5
+        is_up = data > 0
         if is_up:
             low = high
-            high = high * (1 + random.random() / 100)
+            high = high * (1 + data / 100)
         else:
             high = low
-            low = low * (1 - random.random() / 100)
+            low = low * (1 + data / 100)
         z.forward(high, low)
         z.backward()
         z.forward(high, low)
