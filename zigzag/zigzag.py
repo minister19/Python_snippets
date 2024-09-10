@@ -21,10 +21,10 @@ class Zigzag:
         self.deviation = DynamicRange(p_depth, p_deviation_range)
         self.klines: List[Kline] = []           # K线
         self.points: List[ZigZagPoint] = []     # 高低点
-        self.idx = 0
         self.step = p_depth
         self.step_pre = p_depth
         self.cache: tuple[ZigZagPoint, float] = (None, None)
+        self.idx = 0
 
     @staticmethod
     def find_min(data: List[Kline]):
