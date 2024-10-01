@@ -61,12 +61,14 @@ class Zigzag:
                     self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigZagPoint(pivot, 'v')
                 elif pivot.high > self.points[-1].low * (1 + self.deviation.value):
+                    self.cache = None
                     self.points.append(ZigZagPoint(pivot, '^'))
             else:
                 if pivot.high > self.points[-1].high:
                     self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigZagPoint(pivot, '^')
                 elif pivot.low < self.points[-1].high * (1 - self.deviation.value):
+                    self.cache = None
                     self.points.append(ZigZagPoint(pivot, 'v'))
             self.step += 1
 
@@ -81,7 +83,10 @@ class Zigzag:
             self.step_pre = self.step
             self.find_points()
             if self.points[-1].idx == self.idx:
-                self.deviation.reset()
+                if self.cache is not None and self.points[-1].idx > self.cache[0].idx + self.depth:
+                    self.deviation.reset_mid()
+                else:
+                    self.deviation.reset()
             else:
                 self.deviation.forward()
 
@@ -96,8 +101,8 @@ class Zigzag:
         else:
             self.step = self.step_pre
             if self.points[-1].idx == (self.idx - 1):
-                point_new = self.points.pop()
-                if point_new.type == self.cache[0].type:
+                self.points.pop()
+                if self.cache is not None:
                     self.points.append(self.cache[0])
                     self.deviation.restore(self.cache[1])
                 else:
