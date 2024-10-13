@@ -26,10 +26,6 @@ class DynamicRange:
         self.value_pre = self.value
         self.value = self.start
 
-    def reset_mid(self):
-        self.value_pre = self.value
-        self.value = self.mid
-
     def restore(self, value=None):
         if value is None:
             self.value = self.value_pre
