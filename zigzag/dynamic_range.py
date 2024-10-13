@@ -23,7 +23,7 @@ class BaseDynamicRange:
         elif self.value > self.stop:
             self.value += self.step_stop
 
-    def reset(self, idx):
+    def reset(self, idx=None):
         self.value_pre = self.value
         self.value = self.start
         self.idx = idx
@@ -41,7 +41,7 @@ class DynamicRange(BaseDynamicRange):
         super().__init__(p_depth, p_range)
         self.idx_mid = None
 
-    def reset_mid(self, idx):
+    def reset_mid(self, idx=None):
         self.value_pre = self.value
         self.value = self.mid
         self.idx_mid = idx
