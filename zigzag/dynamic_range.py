@@ -9,6 +9,7 @@ class DynamicRange:
         self.step_stop = (self.mid - self.stop) / (self.depth / 2)
         self.value = self.start
         self.value_pre = self.start
+        self.idx = None
 
     def forward(self):
         if self.value > self.mid:
@@ -22,18 +23,22 @@ class DynamicRange:
         elif self.value > self.stop:
             self.value += self.step_stop
 
-    def reset(self):
+    def reset(self, idx):
         self.value_pre = self.value
         self.value = self.start
+        self.idx = idx
 
     def restore(self, value=None):
         if value is None:
             self.value = self.value_pre
         else:
             self.value = value
+        self.idx = None
 
 
 if __name__ == "__main__":
     deviation = DynamicRange(100, [10, 5, 4])
     deviation.forward()
     deviation.backward()
+    deviation.reset(0)
+    deviation.restore()
