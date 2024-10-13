@@ -15,6 +15,7 @@ print("Index of", item_to_find, "in the list:", index)
 # So, in summary, `len(my_list) - 1 - my_list[::-1].index(item_to_find)` calculates the index of the last occurrence of `item_to_find` in the original list `my_list` by reversing the list, finding the index of the first occurrence of `item_to_find` in the reversed list, and then converting it back to the original index.
 
 my_list = [1, 2, 3, 4, 5]
+my_list_sublist = my_list[0:0 + 10]  # my_list_sublist = [1, 2, 3, 4, 5]
 
 # Find the index of the last occurrence of the item
 item_to_find = 3
