@@ -15,7 +15,7 @@ class ZigZagPoint(Kline):
         self.type = type  # '-', '^', 'v'
 
 
-class Zigzag:
+class BaseZigzag:
     def __init__(self, p_depth=200, p_deviation_range=[10.0, 5.0, 4.0]) -> None:
         self.depth = p_depth
         self.deviation = DynamicRange(p_depth, p_deviation_range)
@@ -134,6 +134,32 @@ class Zigzag:
         x = ax.scatter(x=scatter_x2, y=scatter_y2, s=25, c='blue', marker='v')
 
         plt.show()
+
+
+class Zigzag(BaseZigzag):
+    def __init__(self, p_depth=200, p_deviation_range=[10.0, 5.0, 4.0]) -> None:
+        super().__init__(p_depth, p_deviation_range)
+        self.deviation = DynamicRange(p_depth, p_deviation_range)
+
+    def forward(self, high=None, low=None):
+        self.klines.append(Kline(self.idx, high, low))
+
+        if len(self.klines) < self.depth:
+            pass
+        elif len(self.points) < 2:
+            self.init_points()
+        else:
+            self.step_pre = self.step
+            self.find_points()
+            if self.points[-1].idx == self.idx:
+                if self.cache is not None and self.cache[0].idx + self.depth < self.idx:
+                    self.deviation.reset_mid(self.idx)
+                else:
+                    self.deviation.reset(self.idx)
+            else:
+                self.deviation.forward()
+
+        self.idx += 1
 
 
 if __name__ == "__main__":
