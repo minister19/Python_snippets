@@ -83,7 +83,7 @@ class BaseZigzag:
             self.step_pre = self.step
             self.find_points()
             if self.points[-1].idx == self.idx:
-                self.deviation.reset(self.idx)
+                self.deviation.reset()
             else:
                 self.deviation.forward()
 
@@ -153,9 +153,9 @@ class Zigzag(BaseZigzag):
             self.find_points()
             if self.points[-1].idx == self.idx:
                 if self.cache is not None and self.cache[0].idx + self.depth < self.idx:
-                    self.deviation.reset_mid(self.idx)
+                    self.deviation.reset_mid()
                 else:
-                    self.deviation.reset(self.idx)
+                    self.deviation.reset()
             else:
                 self.deviation.forward()
 
