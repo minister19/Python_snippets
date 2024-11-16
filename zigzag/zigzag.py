@@ -171,7 +171,7 @@ class Zigzag(BaseZigzag):
             if self.points[-1].idx == self.idx:
                 if self.cache is not None:
                     if self.cache[0].idx + self.depth < self.idx:
-                        self.deviation.reset_mid()
+                        self.deviation.forward()
                     else:
                         self.deviation.reset()
                 else:
