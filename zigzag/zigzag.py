@@ -22,13 +22,18 @@ class ZigzagPoint(ZigzagKline):
             self.gain = (kline_pre.high - self.low) / kline_pre.high
 
     @property
-    def description(self):
+    def basic_info(self):
         if self.type == 'v':
-            # return f"{self.idx}\n{round(self.low, 1)}\n{round(self.gain*100, 2)}"
-            return f"{round(self.low, 1)}\n{round(self.gain*100, 2)}"
+            return f"{self.idx}\n{round(self.low, 1)}"
         else:
-            # return f"{self.idx}\n{round(self.high, 1)}\n{round(self.gain*100, 2)}"
-            return f"{round(self.high, 1)}\n{round(self.gain*100, 2)}"
+            return f"{self.idx}\n{round(self.high, 1)}"
+
+    @property
+    def basic_description(self):
+        if self.type == 'v':
+            return f"{self.idx}\n{round(self.low, 1)}\n{round(self.gain*100, 1)}%"
+        else:
+            return f"{self.idx}\n{round(self.high, 1)}\n{round(self.gain*100, 1)}%"
 
 
 class BaseZigzag:
@@ -148,9 +153,9 @@ class BaseZigzag:
         x = ax.scatter(x=scatter_x2, y=scatter_y2, s=25, c='blue', marker='v')
         for i, p in enumerate(self.points):
             if p.type == '^':
-                ax.text(p.idx, p.high + 50, f"{p.description}", fontsize=8, horizontalalignment='center')
+                ax.text(p.idx, p.high + 50, f"{p.basic_info}", fontsize=8, horizontalalignment='center')
             else:
-                ax.text(p.idx, p.low - 150, f"{p.description}", fontsize=8, horizontalalignment='center')
+                ax.text(p.idx, p.low - 150, f"{p.basic_info}", fontsize=8, horizontalalignment='center')
 
         plt.show()
 
