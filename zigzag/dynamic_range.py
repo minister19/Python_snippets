@@ -37,16 +37,6 @@ class DynamicRange(BaseDynamicRange):
     def __init__(self, p_depth=100, p_range=[16, 8, 4]) -> None:
         super().__init__(p_depth, p_range)
 
-    def reset_mid(self):
-        self.value_pre = self.value
-        self.value = self.mid
-
-    def restore(self, value=None):
-        if value is None:
-            self.value = self.value_pre
-        else:
-            self.value = value
-
 
 if __name__ == "__main__":
     deviation = DynamicRange(100, [10, 5, 4])
@@ -54,5 +44,4 @@ if __name__ == "__main__":
     deviation.backward()
     deviation.reset()
     deviation.restore()
-    deviation.reset_mid()
     deviation.restore()

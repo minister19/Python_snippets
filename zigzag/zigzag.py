@@ -39,11 +39,11 @@ class ZigzagPoint(ZigzagKline):
 class BaseZigzag:
     def __init__(self, p_depth=200, p_deviation_range=[10.0, 5.0, 4.0]) -> None:
         self.depth = p_depth
-        self.deviation = DynamicRange(p_depth, p_deviation_range)
+        self.deviation = DynamicRange(p_depth, p_deviation_range)   # 波动范围
         self.klines: List[ZigzagKline] = []     # K线
         self.points: List[ZigzagPoint] = []     # 高低点
         self.step = p_depth
-        self.cache: tuple[ZigzagPoint, float] = (None, None)
+        self.cache: tuple[ZigzagPoint, float] = (None, None)        # 当极值点迭代时，缓存旧点
         self.idx = 0
 
     @staticmethod
@@ -107,17 +107,19 @@ class BaseZigzag:
                 self.deviation.forward()
         if len(self.points) >= 2:
             self.points[-1].update_gain(self.points[-2])
+
         self.idx += 1
 
     # 2024-09-09 Shawn: 当覆写 self.points[-1] 时，backward 应恢复原始 point
     def backward(self):
         self.klines.pop()
+        self.idx -= 1
 
         if len(self.points) < 2:
             pass
         else:
             self.step -= 1
-            if self.points[-1].idx == (self.idx - 1):
+            if self.points[-1].idx == self.idx:
                 self.points.pop()
                 if self.cache is not None:
                     self.points.append(self.cache[0])
@@ -126,7 +128,8 @@ class BaseZigzag:
                     self.deviation.restore()
             else:
                 self.deviation.backward()
-        self.idx -= 1
+        if len(self.points) >= 2:
+            self.points[-1].update_gain(self.points[-2])
 
     def render(self):
         import matplotlib.pyplot as plt
@@ -174,17 +177,16 @@ class Zigzag(BaseZigzag):
         else:
             self.find_points()
             if self.points[-1].idx == self.idx:
-                if self.cache is not None:
-                    if self.cache[0].idx + self.depth < self.idx:
-                        self.deviation.forward()
-                    else:
-                        self.deviation.reset()
+                # 如果缓存了旧点，且与新点比较近，则波动仅迭代
+                if self.cache is not None and self.cache[0].idx + self.depth < self.idx:
+                    self.deviation.forward()
                 else:
                     self.deviation.reset()
             else:
                 self.deviation.forward()
         if len(self.points) >= 2:
             self.points[-1].update_gain(self.points[-2])
+
         self.idx += 1
 
 
