@@ -81,14 +81,14 @@ class BaseZigzag:
                     self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigzagPoint(pivot, 'v')
                 elif pivot.high > self.points[-1].low * (1 + self.deviation.value):
-                    self.cache = None
+                    self.cache = (None, None)
                     self.points.append(ZigzagPoint(pivot, '^'))
             else:
                 if pivot.high > self.points[-1].high:
                     self.cache = (self.points[-1], self.deviation.value)
                     self.points[-1] = ZigzagPoint(pivot, '^')
                 elif pivot.low < self.points[-1].high * (1 - self.deviation.value):
-                    self.cache = None
+                    self.cache = (None, None)
                     self.points.append(ZigzagPoint(pivot, 'v'))
             self.step += 1
 
@@ -121,7 +121,7 @@ class BaseZigzag:
             self.step -= 1
             if self.points[-1].idx == self.idx:
                 self.points.pop()
-                if self.cache is not None:
+                if self.cache[0] is not None:
                     self.points.append(self.cache[0])
                     self.deviation.restore(self.cache[1])
                 else:
@@ -178,7 +178,7 @@ class Zigzag(BaseZigzag):
             self.find_points()
             if self.points[-1].idx == self.idx:
                 # 如果缓存了旧点，且与新点比较近，则波动仅迭代
-                if self.cache is not None and self.cache[0].idx + self.depth < self.idx:
+                if self.cache[0] is not None and self.cache[0].idx + self.depth < self.idx:
                     self.deviation.forward()
                 else:
                     self.deviation.reset()
