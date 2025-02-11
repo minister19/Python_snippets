@@ -8,27 +8,26 @@ class BaseDynamicRange:
         self.step_mid = (self.start - self.mid) / (self.depth / 2)
         self.step_stop = (self.mid - self.stop) / (self.depth / 2)
         self.value = self.start
+        self.value_backup = self.start
         self.value_pre = self.start
 
     def forward(self):
+        self.value_pre = self.value
         if self.value > self.mid:
             self.value -= self.step_mid
         elif self.value > self.stop:
             self.value -= self.step_stop
 
     def backward(self):
-        if self.value > self.mid:
-            self.value += self.step_mid
-        elif self.value > self.stop:
-            self.value += self.step_stop
+        self.value = self.value_pre
 
     def reset(self):
-        self.value_pre = self.value
+        self.value_backup = self.value
         self.value = self.start
 
     def restore(self, value=None):
         if value is None:
-            self.value = self.value_pre
+            self.value = self.value_backup
         else:
             self.value = value
 
